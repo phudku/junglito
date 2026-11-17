@@ -58,9 +58,13 @@ const D0 = 6, DNEAR = 2.3, DFAR = 36;
 let px = 0, py = 0, ps = 0;
 function PR(X, D) { const d = D / D0; ps = U / d; px = cx + (X - camL) * ps; py = hY + G / d; }
 function resize() {
-  DPR = Math.min(DPR_MAX, window.devicePixelRatio || 1); W = window.innerWidth; H = window.innerHeight;
+  DPR = Math.min(DPR_MAX, window.devicePixelRatio || 1);
+  // असली दिखने वाला साइज़ (कुछ फ़ोन/ऐप-ब्राउज़र में innerWidth गलत आता है)
+  const vv = window.visualViewport, de = document.documentElement;
+  W = cv.clientWidth || (vv && vv.width) || de.clientWidth || window.innerWidth;
+  H = cv.clientHeight || (vv && vv.height) || de.clientHeight || window.innerHeight;
   cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
-  hY = H * .33; G = H * .30; U = Math.min(H * .16, W * .38); cx = W / 2;
+  hY = H * .33; G = H * .30; U = Math.min(H * .16, W * .30); cx = W / 2;
   try { safeTop = parseFloat(getComputedStyle($('tl')).paddingTop) || 10; } catch (e) {}
 }
 
@@ -1406,7 +1410,11 @@ function frame(ts) {
   sceneCheck += dt; if (sceneCheck > 30) { sceneCheck = 0; if (!sceneManual) setScene(sceneClock()); }
   update(dt); render(); requestAnimationFrame(frame);
 }
-addEventListener('resize', () => { resize(); birds = []; });
+const onSize = () => { const w = cv.clientWidth, h = cv.clientHeight; if (w !== W || h !== H) { resize(); birds = []; } };
+addEventListener('resize', onSize); addEventListener('orientationchange', () => setTimeout(onSize, 250));
+if (window.visualViewport) visualViewport.addEventListener('resize', onSize);
+if (window.ResizeObserver) new ResizeObserver(onSize).observe(cv);
+setTimeout(onSize, 300); setTimeout(onSize, 1200);                  // ऐप-ब्राउज़र देर से सही साइज़ बताते हैं
 (async function boot() {
   resize(); initSky(); worldInit(); applyText(); todIcon(); sndIcon(); requestAnimationFrame(frame);
   await loadImages(); loaded = true; buildTint(); $('loadTx').textContent = '';
