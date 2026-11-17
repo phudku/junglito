@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#2f9b3a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Junglito v1-new</title>
+<link rel="icon" href="images/fruit_mango.webp">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#2f9b3a;font-family:"Baloo 2","Noto Sans Devanagari","Mukta","Trebuchet MS",system-ui,sans-serif;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:none;overscroll-behavior:none}
+canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+/* पारदर्शी अक्षर: मोटे सफ़ेद, गहरा किनारा, हल्की छाया */
+.tx,.gl{color:#fff;font-weight:900;-webkit-text-stroke:3px rgba(18,38,10,.85);paint-order:stroke fill;text-shadow:0 2px 6px rgba(0,0,0,.45)}
+/* धुंधला काँच */
+.gl{border:1.5px solid rgba(255,255,255,.6);background:rgba(255,255,255,.16);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);border-radius:16px;font:inherit;font-weight:900;cursor:pointer;min-height:44px;padding:6px 14px;font-size:17px;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.gl.on{background:rgba(255,255,255,.38);border:2.5px solid #fff}
+.gl:active{transform:scale(.96)}
+.ui{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;pointer-events:auto;z-index:3}
+.ui.show{display:flex}
+#startUI{padding-top:calc(58px + env(safe-area-inset-top));justify-content:space-between;padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+.title{font-size:clamp(44px,13vw,72px);letter-spacing:2px;line-height:1;-webkit-text-stroke:5px rgba(18,52,10,.9);text-shadow:0 4px 10px rgba(0,0,0,.5)}
+.tabs{display:flex;gap:10px;margin-top:10px}
+.tabs .gl{min-width:110px}
+.lvls{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;max-width:96vw;padding:0 6px}
+.lv{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:64px;padding:5px 8px;line-height:1.1;font-size:17px}
+.lv small{font-size:12px;-webkit-text-stroke:2px rgba(18,38,10,.85);display:flex;align-items:center;gap:2px}
+.lv.lock{opacity:.6;cursor:default}
+img.cn{width:16px;height:16px;vertical-align:middle}
+#hint{position:fixed;left:0;right:0;top:42%;display:none;flex-direction:column;align-items:center;pointer-events:none;z-index:4}
+#hint.show{display:flex}
+#hint .f{font-size:52px;animation:wig 1.2s ease-in-out infinite;filter:drop-shadow(0 4px 4px rgba(0,0,0,.3))}
+#hint .t{margin-top:2px;font-size:21px;max-width:90vw;text-align:center}
+@keyframes wig{0%,100%{transform:translate(-16px,0) rotate(-8deg)}50%{transform:translate(16px,8px) rotate(8deg)}}
+#tl{position:fixed;left:0;top:0;padding:calc(8px + env(safe-area-inset-top)) 10px 0;display:flex;gap:8px;z-index:6;pointer-events:none}
+.ic{width:42px;height:42px;min-height:0;padding:7px;border-radius:50%;display:flex;align-items:center;justify-content:center;pointer-events:auto;opacity:.78;text-decoration:none;font-size:19px;-webkit-text-stroke:0}
+.ic svg{width:100%;height:100%;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+#basketHit{position:fixed;right:0;top:0;width:150px;height:calc(70px + env(safe-area-inset-top));display:none;background:transparent;border:0;z-index:6;cursor:pointer}
+#basketHit.show{display:block}
+.corner{position:fixed;bottom:calc(10px + env(safe-area-inset-bottom));display:flex;gap:8px;z-index:6}
+#corners{display:none}#corners.show{display:block}
+#pauseUI{justify-content:center;gap:4px;padding:70px 10px 40px}
+#pauseUI .lab{font-size:18px}
+#pauseUI .big{font-size:58px;line-height:1.05;-webkit-text-stroke:5px rgba(18,52,10,.9)}
+#pauseUI .row2{font-size:20px;display:flex;gap:14px;align-items:center}
+#pauseUI .row2 img.cn{width:22px;height:22px}
+#pFruits{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 10px;max-width:92vw;margin:6px 0}
+#pFruits div{display:flex;align-items:center;gap:2px}
+#pFruits img{width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
+#pFruits b{color:#fff;font-size:19px;-webkit-text-stroke:3px rgba(18,38,10,.85);paint-order:stroke fill}
+#pauseUI .go{font-size:24px;margin:12px 0 10px;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.07)}}
+#unlockUI{justify-content:center;gap:18px}
+#uTitle{font-size:clamp(30px,9vw,46px);text-align:center;padding:0 10px;animation:pulse 1.4s ease-in-out infinite}
+.row{display:flex;gap:12px}
+#setUI{justify-content:center;gap:10px;z-index:8;background:rgba(0,0,0,.08)}
+#tunes{display:flex;flex-direction:column;gap:9px;min-width:230px}
+.tb{font-size:19px}
+.ver{position:fixed;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom));text-align:center;font-size:12px;-webkit-text-stroke:2px rgba(18,38,10,.8);pointer-events:none;z-index:2;opacity:.85}
+#loadTx{position:fixed;left:0;right:0;top:55%;text-align:center;font-size:18px;z-index:7;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="tl"><button class="gl ic" id="tod" aria-label="time"></button><button class="gl ic" id="snd" aria-label="sound"></button></div>
+<button id="basketHit" aria-label="basket"></button>
+
+<div class="ui" id="startUI">
+  <div style="display:flex;flex-direction:column;align-items:center">
+    <div class="tx title">JUNGLITO</div>
+    <div class="tabs"><button class="gl" id="lhi">हिंदी</button><button class="gl" id="len">English</button></div>
+  </div>
+  <div class="lvls" id="lvls"></div>
+</div>
+<div id="hint"><div class="f">👆</div><div class="t tx" data-t="hint"></div></div>
+
+<div class="ui" id="pauseUI">
+  <div class="tx lab" data-t="thisGame"></div>
+  <div class="tx big" id="pScore">0</div>
+  <div class="tx row2"><span>🧺 <span id="pTotal">0</span></span><span><span data-t="last"></span>: <span id="pLast">0</span></span><span id="pCoins"></span></div>
+  <div id="pFruits"></div>
+  <div class="tx go" data-t="tapGo"></div>
+  <button class="gl" id="closeBtn" data-t="close"></button>
+</div>
+
+<div class="ui" id="unlockUI">
+  <div class="tx" id="uTitle"></div>
+  <div class="row"><button class="gl" id="uNext"></button><button class="gl" id="uStay"></button></div>
+</div>
+
+<div class="ui" id="setUI">
+  <div class="tx" style="font-size:22px" data-t="tune"></div>
+  <div id="tunes"></div>
+  <button class="gl" id="setClose" style="min-width:90px">OK</button>
+</div>
+
+<div id="corners">
+  <div class="corner" style="left:10px">
+    <button class="gl ic" id="shareBtn" aria-label="share"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button>
+    <a class="gl ic" id="fbBtn" aria-label="feedback" target="_blank" rel="noopener">💬</a>
+  </div>
+  <div class="corner" style="right:10px"><button class="gl ic" id="setBtn" aria-label="settings">🎵</button></div>
+</div>
+<div class="tx ver" id="ver"></div>
+<div class="tx" id="loadTx"></div>
+
+<script src="game.js"></script>
+</body>
+</html>
